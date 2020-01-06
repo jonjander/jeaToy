@@ -26,7 +26,7 @@ function ReadButtons() {
     buttonStates = read & readMode
 }
 
-let writeMode = 0b00000001 //0b00000001
+let writeMode = 0b01000000 //0b00000001
 let readMode = 0b11111111 //0b11111111
 let inputAddress = 0x20 //0x20
 let ledAddress = 0x21 //0x21
