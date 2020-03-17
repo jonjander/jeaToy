@@ -79,7 +79,7 @@ let register = 0
 let buttonStates = 0
 let ledState = 0
 let read = 0
-let valueResult = 0
+let InputPinStates = 0
 let writeMode = 255
 let readMode = 255
 
@@ -100,6 +100,8 @@ let blueBtnLed     = 5
 let blueSwitchLed  = 6
 let redSwitchLed   = 7
 
+let switchMask = bit(redBtn) | bit(blueBtn) | bit(yellowBtn) | bit (greenBtn) 
+
 inputAddress = 32
 ledAddress = 33
 ResetInputs()
@@ -108,22 +110,67 @@ function bit(pin: number): number {
     return 1 << pin
 }
 SetSwitchLED(0, true)
+
+
+
+function DisplayInteFace(){
+    if((InputPinStates & (bit(blueSwitch) | bit(redSwitch))) == 0) {
+        light.setPhotonMode(PhotonMode.Off);
+        switch (InputPinStates & switchMask) {
+            case 0:
+                light.setAll(0x000000);
+                break;
+            case bit(greenBtn):
+                light.showAnimation(light.sparkleAnimation, 500);
+                break;
+            case bit(yellowBtn):
+                light.showAnimation(light.runningLightsAnimation, 500);
+                break;
+            case bit(greenBtn) | bit(yellowBtn):
+                light.showAnimation(light.rainbowAnimation, 500);
+                break;
+            case bit(redBtn):
+                light.showAnimation(light.cometAnimation, 500);
+                break;
+            case bit(redBtn)| bit(greenBtn):
+                light.showAnimation(light.colorWipeAnimation, 500);
+                break;
+            case bit(redBtn) | bit(yellowBtn):
+                light.showAnimation(light.theaterChaseAnimation, 500);
+                break;
+            case bit(redBtn) | bit(yellowBtn):
+                light.showAnimation(light.theaterChaseAnimation, 500);
+                break;
+            break;
+            default:
+
+            break;
+        }
+    } else {
+        let speed = ((InputPinStates & bit(blueBtn)) * 5) + ((InputPinStates & bit(redBtn)) * 20) +  ((InputPinStates & bit(yellowBtn)) * 25) + ((InputPinStates & bit(greenBtn)) * 50);
+        light.photonForward(1);
+        pause(100  - speed);
+    }
+}
+
+
 forever(function () {
-    valueResult = pins.i2cReadNumber(
+    InputPinStates = pins.i2cReadNumber(
         32,
         NumberFormat.Int8LE,
         false
     )
     for (let index = 0; index <= 7; index++) {
-        let reg = valueResult & bit(index)
+        let reg = InputPinStates & bit(index)
         if ((bit(index) && readMode) > 0) {
             if (reg != 0) {
-                light.setPixelColor(index, 0xff0000)
-                SetSwitchLED(GetSwitchLed(index), false)
-            } else {
-                light.setPixelColor(index, 0x00ff00)
+                //light.setPixelColor(index, 0xff0000)
                 SetSwitchLED(GetSwitchLed(index), true)
+            } else {
+                //light.setPixelColor(index, 0x00ff00)
+                SetSwitchLED(GetSwitchLed(index), false)
             }
         }
     }
+    DisplayInteFace();
 })
