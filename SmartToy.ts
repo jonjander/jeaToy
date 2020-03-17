@@ -1,4 +1,7 @@
 function SetSwitchLED(led: number, state: boolean) {
+    if (led == 10) {
+        return;
+    }
     if (state == true) {
         ledState = ledState | bit(led);
     } else {
@@ -11,15 +14,21 @@ function SetSwitchLED(led: number, state: boolean) {
 function GetSwitchLed(led: number): number {
     switch (led) {
         case powerBtn:
-            return 0;
+            return 10;
         case redBtn:
             return redBtnLed;
         case blueBtn:
-            return blueBtnLed;
+            return blueBtnLed; 
+        case yellowBtn:
+            return yellowBtnLed; 
         case engineBtn:
             return engineBtnLed;
         case greenBtn:
             return greenBtnLed;
+        case blueSwitch:
+            return blueSwitchLed;
+        case redSwitch:
+            return redSwitchLed;
         default:
             return led;
         
@@ -74,22 +83,22 @@ let valueResult = 0
 let writeMode = 255
 let readMode = 255
 
-let powerBtn       = 0b1
-let redBtn         = 0b10
-let blueBtn        = 0b100
-let yellowBtn      = 0b1000
-let engineBtn      = 0b10000
-let greenBtn       = 0b100000
-let blueSwitch     = 0b1000000
-let redSwitch      = 0b10000000
+let powerBtn       = 0
+let redBtn         = 1
+let blueBtn        = 2
+let yellowBtn      = 3
+let engineBtn      = 4
+let greenBtn       = 5
+let blueSwitch     = 6
+let redSwitch      = 7
   
-let engineBtnLed   = 0b1
-let greenBtnLed    = 0b100
-let yellowBtnLed   = 0b1000
-let redBtnLed      = 0b10000
-let blueBtnLed     = 0b100000
-let blueSwitchLed  = 0b1000000
-let redSwitchLed   = 0b10000000
+let engineBtnLed   = 0
+let greenBtnLed    = 2
+let yellowBtnLed   = 3
+let redBtnLed      = 4
+let blueBtnLed     = 5
+let blueSwitchLed  = 6
+let redSwitchLed   = 7
 
 inputAddress = 32
 ledAddress = 33
