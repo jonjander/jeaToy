@@ -161,6 +161,10 @@ function DisplayInteFace(){
                 light.graph(255 - input.lightLevel(), 255);
                 break;
             break;
+            case bit(blueBtn) | bit(redBtn) | bit(greenBtn):
+                light.graph(input.temperature(TemperatureUnit.Celsius) + 25, 37 + 25;
+                break;
+            break;
             default:
 
             break;
