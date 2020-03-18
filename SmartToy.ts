@@ -115,7 +115,6 @@ SetSwitchLED(0, true)
 
 function DisplayInteFace(){
     if((InputPinStates & (bit(blueSwitch) | bit(redSwitch))) == 0) {
-        light.setPhotonMode(PhotonMode.Off);
         switch (InputPinStates & switchMask) {
             case 0:
                 light.setAll(0x000000);
@@ -147,19 +146,49 @@ function DisplayInteFace(){
             break;
         }
     } else {
-        let speed = ((InputPinStates & bit(blueBtn)) * 5) + ((InputPinStates & bit(redBtn)) * 20) +  ((InputPinStates & bit(yellowBtn)) * 25) + ((InputPinStates & bit(greenBtn)) * 50);
-        light.photonForward(1);
-        pause(100  - speed);
+        //bug
+        //let speed = ((InputPinStates & bit(blueBtn)) * 5) + ((InputPinStates & bit(redBtn)) * 20) +  ((InputPinStates & bit(yellowBtn)) * 25) + ((InputPinStates & bit(greenBtn)) * 50);
+        //light.photonForward(1);
+        //pause(100  - speed);
     }
 }
 
+function PlayNormalTone(note: Note, state: boolean) {
+    let offSet = 23;
+    if (newState & bit(blueBtn)) {
+        music.playTone(note, music.beat(BeatFraction.Half));
+    } else {
+        music.playTone(note - offSet, music.beat(BeatFraction.Half));
+    }
+}
 
-forever(function () {
-    InputPinStates = pins.i2cReadNumber(
+function OnChangeBtn(newState: number, oldState: number){
+    if(newState != oldState) {
+        let statesChanged = newState ^ oldState;
+        if (statesChanged & bit(blueBtn)) {
+            PlayNormalTone(Note.C5, newState & bit(blueBtn));
+        }
+        if (statesChanged & bit(redBtn)) {
+            PlayNormalTone(Note.D5, newState & bit(redBtn));
+        }
+        if (statesChanged & bit(yellowBtn)) {
+            PlayNormalTone(Note.F5, newState & bit(yellowBtn));
+        }
+        if (statesChanged & bit(greenBtn)) {
+            PlayNormalTone(Note.G5, newState & bit(greenBtn));
+        }
+    }
+}
+
+function ReadBtnStates(){
+    let oldState = InputPinStates;
+    let readInput = pins.i2cReadNumber(
         32,
         NumberFormat.Int8LE,
         false
     )
+    InputPinStates = readInput; //Save new state
+
     for (let index = 0; index <= 7; index++) {
         let reg = InputPinStates & bit(index)
         if ((bit(index) && readMode) > 0) {
@@ -172,5 +201,10 @@ forever(function () {
             }
         }
     }
+    OnChangeBtn(readInput, oldState);
+}
+
+forever(function () {
+    ReadBtnStates();
     DisplayInteFace();
 })
