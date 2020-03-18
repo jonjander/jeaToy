@@ -120,25 +120,25 @@ function DisplayInteFace(){
                 light.setAll(0x000000);
                 break;
             case bit(greenBtn):
-                light.showAnimation(light.sparkleAnimation, 500);
+                light.showAnimationFrame(light.sparkleAnimation);
                 break;
             case bit(yellowBtn):
-                light.showAnimation(light.runningLightsAnimation, 500);
+                light.showAnimationFrame(light.runningLightsAnimation);
                 break;
             case bit(greenBtn) | bit(yellowBtn):
-                light.showAnimation(light.rainbowAnimation, 500);
+                light.showAnimationFrame(light.rainbowAnimation);
                 break;
             case bit(redBtn):
-                light.showAnimation(light.cometAnimation, 500);
+                light.showAnimationFrame(light.cometAnimation);
                 break;
             case bit(redBtn)| bit(greenBtn):
-                light.showAnimation(light.colorWipeAnimation, 500);
+                light.showAnimationFrame(light.colorWipeAnimation);
                 break;
             case bit(redBtn) | bit(yellowBtn):
-                light.showAnimation(light.theaterChaseAnimation, 500);
+                light.showAnimationFrame(light.theaterChaseAnimation);
                 break;
             case bit(redBtn) | bit(yellowBtn):
-                light.showAnimation(light.theaterChaseAnimation, 500);
+                light.showAnimationFrame(light.theaterChaseAnimation);
                 break;
             break;
             default:
@@ -235,12 +235,12 @@ function DisplayEngineStatus() {
             light.setAll(light.colors(Colors.Yellow));
         break;
         case EngineStates.Running:
-            light.showAnimation(light.colorWipeAnimation, 500);
+            light.showAnimationFrame(light.colorWipeAnimation, 500);
         break;
         case EngineStates.Starting:
             light.clear();
             PlayCustomMelody("C5:1 F:1 A:1 F:1 A:1 G:1 C5:1 A:1");
-            light.showAnimation(light.sparkleAnimation, 200);
+            light.showAnimation(light.sparkleAnimation, 400);
             
         break;
 
