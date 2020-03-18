@@ -148,29 +148,50 @@ function DisplayInteFace(){
    
 }
 
-function PlayNormalTone(note: Note, state: boolean) {
-    let offSet = 23;
-    if (state) {
-        music.playTone(note, music.beat(BeatFraction.Half));
-    } else {
-        music.playTone(note - offSet, music.beat(BeatFraction.Half));
-    }
+function PlayNormalTone(note: string, speed: number = 2) {
+    PlayCustomMelody(`${note}:${speed.toString()}`);
 }
 
 function OnChangeBtn(newState: number, oldState: number) {
     if (newState != oldState) {
         let statesChanged = newState ^ oldState;
+
+        if (statesChanged & bit(ignitionBtn)) {
+            if (ToBool(newState & bit(ignitionBtn))) {
+                PlayNormalTone("A4");
+            } else {
+                PlayNormalTone("A3");
+            }
+            
+        }
         if (statesChanged & bit(blueBtn)) {
-            PlayNormalTone(Note.C5, (newState & bit(blueBtn)) > 0);
+            if (ToBool(newState & bit(blueBtn))) {
+                PlayNormalTone("C5");
+            } else {
+                PlayNormalTone("C4");
+            }
+            
         }
         if (statesChanged & bit(redBtn)) {
-            PlayNormalTone(Note.D5, (newState & bit(redBtn)) > 0);
+            if (ToBool(newState & bit(redBtn))) {
+                PlayNormalTone("D5");
+            } else {
+                PlayNormalTone("D4");
+            }
         }
         if (statesChanged & bit(yellowBtn)) {
-            PlayNormalTone(Note.F5, (newState & bit(yellowBtn)) > 0);
+            if (ToBool(newState & bit(yellowBtn))) {
+                PlayNormalTone("F5");
+            } else {
+                PlayNormalTone("F4");
+            }
         }
         if (statesChanged & bit(greenBtn)) {
-            PlayNormalTone(Note.G5, (newState & bit(greenBtn)) > 0);
+            if (ToBool(newState & bit(greenBtn))) {
+                PlayNormalTone("G5");
+            } else {
+                PlayNormalTone("G4");
+            }
         }
     }
 }
@@ -195,6 +216,13 @@ function GetDeltaMs(): number {
     return delta;
 }
 
+//"A5:1 E5:1 E5 E5:2 F5 F5:1-50 G5 G5"
+function PlayCustomMelody(mel: string){
+    music.stopAllSounds(); //todo try without
+    let currMelody = new music.Melody(mel);
+    currMelody.play();
+}
+
 function DisplayEngineStatus() {
     switch (EngineState) {
         case EngineStates.Unknown:
@@ -211,8 +239,9 @@ function DisplayEngineStatus() {
         break;
         case EngineStates.Starting:
             light.clear();
+            PlayCustomMelody("C5:1 F:1 A:1 F:1 A:1 G:1 C5:1 A:1");
             light.showAnimation(light.sparkleAnimation, 200);
-            music.playMelody("C5 F A F A G C5 A ", 500);
+            
         break;
 
         default:
@@ -254,7 +283,7 @@ function EngineStarter(){
             }
             break;
         case EngineStates.Started: 
-            music.playMelody("C5 F F F F F A A ", 550);
+            PlayCustomMelody("C5:2 F:2 F:2 F:1 F:1 F:2 A:2 A:2");
             light.clear();
             light.showRing(`black black black black red red black black black black`, 100)
             light.showRing(`black black black red red red red black black black`, 100)
