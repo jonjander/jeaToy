@@ -131,14 +131,34 @@ function DisplayInteFace(){
             case bit(redBtn):
                 light.showAnimationFrame(light.cometAnimation);
                 break;
-            case bit(redBtn)| bit(greenBtn):
+            case bit(redBtn) | bit(greenBtn):
                 light.showAnimationFrame(light.colorWipeAnimation);
                 break;
             case bit(redBtn) | bit(yellowBtn):
                 light.showAnimationFrame(light.theaterChaseAnimation);
                 break;
-            case bit(redBtn) | bit(yellowBtn):
-                light.showAnimationFrame(light.theaterChaseAnimation);
+            case bit(redBtn) | bit(yellowBtn) | bit(greenBtn):
+                light.graph(255 - input.soundLevel(), 255);
+                break;
+            break;
+            case bit(blueBtn):
+                light.graph(input.acceleration(Dimension.Z));
+                break;
+            break;
+            case bit(blueBtn) | bit(greenBtn):
+                light.graph(input.acceleration(Dimension.X));
+                break;
+            break;
+            case bit(blueBtn) | bit(yellowBtn):
+                light.graph(input.acceleration(Dimension.Y));
+                break;
+            break;
+            case bit(blueBtn) | bit(yellowBtn) | bit(greenBtn):
+                light.graph(input.acceleration(Dimension.Strength));
+                break;
+            break;
+            case bit(blueBtn) | bit(redBtn):
+                light.graph(255 - input.lightLevel(), 255);
                 break;
             break;
             default:
@@ -361,7 +381,4 @@ forever(function () {
         //Not engine reset to unknown
         EngineState = EngineStates.Unknown;
     }
-
-    
-    
 })
