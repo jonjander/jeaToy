@@ -114,7 +114,7 @@ SetSwitchLED(0, true)
 
 
 function DisplayInteFace(){
-    if((InputPinStates & (bit(blueSwitch) | bit(redSwitch))) == 0) {
+    
         switch (InputPinStates & switchMask) {
             case 0:
                 light.setAll(0x000000);
@@ -145,42 +145,59 @@ function DisplayInteFace(){
 
             break;
         }
-    } else {
-        //bug
-        //let speed = ((InputPinStates & bit(blueBtn)) * 5) + ((InputPinStates & bit(redBtn)) * 20) +  ((InputPinStates & bit(yellowBtn)) * 25) + ((InputPinStates & bit(greenBtn)) * 50);
-        //light.photonForward(1);
-        //pause(100  - speed);
-    }
+   
 }
 
 function PlayNormalTone(note: Note, state: boolean) {
     let offSet = 23;
-    if (newState & bit(blueBtn)) {
+    if (state) {
         music.playTone(note, music.beat(BeatFraction.Half));
     } else {
         music.playTone(note - offSet, music.beat(BeatFraction.Half));
     }
 }
 
-function OnChangeBtn(newState: number, oldState: number){
-    if(newState != oldState) {
+function OnChangeBtn(newState: number, oldState: number) {
+    if (newState != oldState) {
         let statesChanged = newState ^ oldState;
         if (statesChanged & bit(blueBtn)) {
-            PlayNormalTone(Note.C5, newState & bit(blueBtn));
+            PlayNormalTone(Note.C5, (newState & bit(blueBtn)) > 0);
         }
         if (statesChanged & bit(redBtn)) {
-            PlayNormalTone(Note.D5, newState & bit(redBtn));
+            PlayNormalTone(Note.D5, (newState & bit(redBtn)) > 0);
         }
         if (statesChanged & bit(yellowBtn)) {
-            PlayNormalTone(Note.F5, newState & bit(yellowBtn));
+            PlayNormalTone(Note.F5, (newState & bit(yellowBtn)) > 0);
         }
         if (statesChanged & bit(greenBtn)) {
-            PlayNormalTone(Note.G5, newState & bit(greenBtn));
+            PlayNormalTone(Note.G5, (newState & bit(greenBtn)) > 0);
         }
     }
 }
 
-function ReadBtnStates(){
+
+
+let isEngineRunning = false;
+let starterPressed = 0;
+function EngineStarter(){
+
+}
+
+function ShowButtonState(state: number, inverted: boolean = false){
+    for (let index = 0; index <= 7; index++) {
+        let reg = state & bit(index)
+        if ((bit(index) && readMode) > 0) {
+            if (reg != 0) {
+                SetSwitchLED(GetSwitchLed(index), !inverted)
+            } else {
+                SetSwitchLED(GetSwitchLed(index), inverted)
+            }
+        }
+    }
+}
+
+
+function ReadBtnStates(): number{
     let oldState = InputPinStates;
     let readInput = pins.i2cReadNumber(
         32,
@@ -189,22 +206,35 @@ function ReadBtnStates(){
     )
     InputPinStates = readInput; //Save new state
 
-    for (let index = 0; index <= 7; index++) {
-        let reg = InputPinStates & bit(index)
-        if ((bit(index) && readMode) > 0) {
-            if (reg != 0) {
-                //light.setPixelColor(index, 0xff0000)
-                SetSwitchLED(GetSwitchLed(index), true)
-            } else {
-                //light.setPixelColor(index, 0x00ff00)
-                SetSwitchLED(GetSwitchLed(index), false)
-            }
-        }
-    }
     OnChangeBtn(readInput, oldState);
+    retrun InputPinStates;
+}
+
+interface Number {
+    ToBool(): Boolean;
+}
+Number.prototype.ToBool = function(): Boolean {
+    if (Number(this) > 0) {
+        return true;
+    } else {
+        return false;
+    }
+}
+
+function BtnState(btn: number): Boolean {
+    return (InputPinStates & bit(btn)).ToBool();
 }
 
 forever(function () {
-    ReadBtnStates();
-    DisplayInteFace();
+    let btnStates = ReadBtnStates();
+    //Color mode
+    if(BtnState(redSwitch) && BtnState(blueSwitch)) {
+        ShowButtonState(btnStates);
+        DisplayInteFace();
+    } else if (BtnState(redSwitch) && !BtnState(blueSwitch)) {
+        ShowButtonState(btnStates, true);
+    }
+
+    
+    
 })
