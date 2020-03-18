@@ -13,7 +13,7 @@ function SetSwitchLED(led: number, state: boolean) {
 
 function GetSwitchLed(led: number): number {
     switch (led) {
-        case powerBtn:
+        case ignitionBtn:
             return 10;
         case redBtn:
             return redBtnLed;
@@ -83,7 +83,7 @@ let InputPinStates = 0
 let writeMode = 255
 let readMode = 255
 
-let powerBtn       = 0
+let ignitionBtn       = 0
 let redBtn         = 1
 let blueBtn        = 2
 let yellowBtn      = 3
@@ -179,8 +179,102 @@ function OnChangeBtn(newState: number, oldState: number) {
 
 let isEngineRunning = false;
 let starterPressed = 0;
-function EngineStarter(){
+enum EngineStates {
+    Unknown,
+    Stopped,
+    Starting,
+    Running,
+    Ignition,
+    Started
+}
+let EngineState = EngineStates.Unknown;
 
+function GetDeltaMs(): number {
+    let delta = control.timer1.millis();
+    control.timer1.reset();
+    return delta;
+}
+
+function DisplayEngineStatus() {
+    switch (EngineState) {
+        case EngineStates.Unknown:
+            light.setAll(light.colors(Colors.Black));
+        break;
+        case EngineStates.Stopped:
+            light.setAll(light.colors(Colors.Red));
+        break;
+        case EngineStates.Ignition:
+            light.setAll(light.colors(Colors.Yellow));
+        break;
+        case EngineStates.Running:
+            light.showAnimation(light.colorWipeAnimation, 500);
+        break;
+        case EngineStates.Starting:
+            light.clear();
+            light.showAnimation(light.sparkleAnimation, 200);
+            music.playMelody("C5 F A F A G C5 A ", 500);
+        break;
+
+        default:
+
+        break;
+    }
+}
+
+function EngineStarter(){
+    switch (EngineState) {
+        case EngineStates.Unknown:
+            if (!BtnState(ignitionBtn) && !BtnState(blueBtn) && !BtnState(redBtn) && !BtnState(yellowBtn) && !BtnState(greenBtn)) {
+                EngineState = EngineStates.Stopped;
+            }
+            break;
+        case EngineStates.Stopped:
+            //Check ignition
+            if (BtnState(ignitionBtn) && BtnState(blueBtn) && BtnState(redBtn) && BtnState(yellowBtn) && BtnState(greenBtn)) {
+                EngineState = EngineStates.Ignition;
+            }
+        break;
+        case EngineStates.Starting:
+            if (!BtnState(engineBtn)) {
+                EngineState = EngineStates.Ignition;
+            }
+        case EngineStates.Ignition: 
+            if (!(BtnState(ignitionBtn) && BtnState(blueBtn) && BtnState(redBtn) && BtnState(yellowBtn) && BtnState(greenBtn))) {
+                EngineState = EngineStates.Unknown;
+            }
+            if (BtnState(engineBtn)) {
+                starterPressed += GetDeltaMs();
+                EngineState = EngineStates.Starting;
+                if (starterPressed > 4000) {
+                    EngineState = EngineStates.Started;
+                }
+            } else {
+                starterPressed = 0;
+                control.timer1.reset();
+            }
+            break;
+        case EngineStates.Started: 
+            music.playMelody("C5 F F F F F A A ", 550);
+            light.clear();
+            light.showRing(`black black black black red red black black black black`, 100)
+            light.showRing(`black black black red red red red black black black`, 100)
+            light.showRing(`black black red red red red red red black black`, 100)
+            light.showRing(`black red red red red red red red red black`, 100)
+            light.showRing(`red red red red red red red red red red`, 100)
+            EngineState = EngineStates.Running;
+        case EngineStates.Running:
+            //Check ignition
+            if (!BtnState(ignitionBtn)) {
+                EngineState = EngineStates.Unknown;
+            }
+        break;
+
+
+        default:
+
+        break;
+    }
+    DisplayEngineStatus();
 }
 
 function ShowButtonState(state: number, inverted: boolean = false){
@@ -207,14 +301,12 @@ function ReadBtnStates(): number{
     InputPinStates = readInput; //Save new state
 
     OnChangeBtn(readInput, oldState);
-    retrun InputPinStates;
+    return InputPinStates;
 }
 
-interface Number {
-    ToBool(): Boolean;
-}
-Number.prototype.ToBool = function(): Boolean {
-    if (Number(this) > 0) {
+
+function ToBool(inputNumb: number): Boolean {
+    if (inputNumb > 0) {
         return true;
     } else {
         return false;
@@ -222,7 +314,7 @@ Number.prototype.ToBool = function(): Boolean {
 }
 
 function BtnState(btn: number): Boolean {
-    return (InputPinStates & bit(btn)).ToBool();
+    return ToBool((InputPinStates & bit(btn)));
 }
 
 forever(function () {
@@ -232,7 +324,13 @@ forever(function () {
         ShowButtonState(btnStates);
         DisplayInteFace();
     } else if (BtnState(redSwitch) && !BtnState(blueSwitch)) {
-        ShowButtonState(btnStates, true);
+        ShowButtonState(btnStates);
+        EngineStarter();
+    }
+
+    if (!(BtnState(redSwitch) && !BtnState(blueSwitch))) {
+        //Not engine reset to unknown
+        EngineState = EngineStates.Unknown;
     }
 
     
